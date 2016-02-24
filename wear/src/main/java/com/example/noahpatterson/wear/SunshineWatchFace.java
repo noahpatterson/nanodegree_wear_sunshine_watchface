@@ -36,6 +36,10 @@ import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 
 import java.lang.ref.WeakReference;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -51,43 +55,51 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
      * Update rate in milliseconds for interactive mode. We update once a second since seconds are
      * displayed in interactive mode.
      */
-    private static final long INTERACTIVE_UPDATE_RATE_MS = TimeUnit.SECONDS.toMillis(1);
+//    private static final long INTERACTIVE_UPDATE_RATE_MS = TimeUnit.SECONDS.toMillis(1);
 
     /**
      * Handler message id for updating the time periodically in interactive mode.
      */
-    private static final int MSG_UPDATE_TIME = 0;
+//    private static final int MSG_UPDATE_TIME = 0;
 
     @Override
     public Engine onCreateEngine() {
         return new Engine();
     }
 
-    private static class EngineHandler extends Handler {
-        private final WeakReference<SunshineWatchFace.Engine> mWeakReference;
-
-        public EngineHandler(SunshineWatchFace.Engine reference) {
-            mWeakReference = new WeakReference<>(reference);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            SunshineWatchFace.Engine engine = mWeakReference.get();
-            if (engine != null) {
-                switch (msg.what) {
-                    case MSG_UPDATE_TIME:
-                        engine.handleUpdateTimeMessage();
-                        break;
-                }
-            }
-        }
-    }
+//    private static class EngineHandler extends Handler {
+//        private final WeakReference<SunshineWatchFace.Engine> mWeakReference;
+//
+//        public EngineHandler(SunshineWatchFace.Engine reference) {
+//            mWeakReference = new WeakReference<>(reference);
+//        }
+//
+//        @Override
+//        public void handleMessage(Message msg) {
+//            SunshineWatchFace.Engine engine = mWeakReference.get();
+//            if (engine != null) {
+//                switch (msg.what) {
+//                    case MSG_UPDATE_TIME:
+//                        engine.handleUpdateTimeMessage();
+//                        break;
+//                }
+//            }
+//        }
+//    }
 
     private class Engine extends CanvasWatchFaceService.Engine {
-        final Handler mUpdateTimeHandler = new EngineHandler(this);
+//        final Handler mUpdateTimeHandler = new EngineHandler(this);
         boolean mRegisteredTimeZoneReceiver = false;
         Paint mBackgroundPaint;
         Paint mTextPaint;
+
+        //add date
+        Paint mDatePaint;
+        Calendar mCalendar;
+        Date mDate;
+        SimpleDateFormat mDayOfWeekFormat;
+        java.text.DateFormat mDateFormat;
+
         boolean mAmbient;
         Time mTime;
         final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
@@ -122,17 +134,22 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             mYOffset = resources.getDimension(R.dimen.digital_y_offset);
 
             mBackgroundPaint = new Paint();
-            mBackgroundPaint.setColor(resources.getColor(R.color.background));
+            mBackgroundPaint.setColor(resources.getColor(R.color.primary));
 
             mTextPaint = new Paint();
             mTextPaint = createTextPaint(resources.getColor(R.color.digital_text));
 
+            mDatePaint = new Paint();
+            mDatePaint = createTextPaint(resources.getColor(R.color.digital_text));
+
             mTime = new Time();
+            mCalendar = Calendar.getInstance();
+            mDate = new Date();
         }
 
         @Override
         public void onDestroy() {
-            mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME);
+//            mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME);
             super.onDestroy();
         }
 
@@ -160,7 +177,7 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
 
             // Whether the timer should be running depends on whether we're visible (as well as
             // whether we're in ambient mode), so we may need to start or stop the timer.
-            updateTimer();
+//            updateTimer();
         }
 
         private void registerReceiver() {
@@ -220,32 +237,32 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
 
             // Whether the timer should be running depends on whether we're visible (as well as
             // whether we're in ambient mode), so we may need to start or stop the timer.
-            updateTimer();
+//            updateTimer();
         }
 
         /**
          * Captures tap event (and tap type) and toggles the background color if the user finishes
          * a tap.
          */
-        @Override
-        public void onTapCommand(int tapType, int x, int y, long eventTime) {
-            Resources resources = SunshineWatchFace.this.getResources();
-            switch (tapType) {
-                case TAP_TYPE_TOUCH:
-                    // The user has started touching the screen.
-                    break;
-                case TAP_TYPE_TOUCH_CANCEL:
-                    // The user has started a different gesture or otherwise cancelled the tap.
-                    break;
-                case TAP_TYPE_TAP:
-                    // The user has completed the tap gesture.
-                    mTapCount++;
-                    mBackgroundPaint.setColor(resources.getColor(mTapCount % 2 == 0 ?
-                            R.color.background : R.color.background2));
-                    break;
-            }
-            invalidate();
-        }
+//        @Override
+//        public void onTapCommand(int tapType, int x, int y, long eventTime) {
+//            Resources resources = SunshineWatchFace.this.getResources();
+//            switch (tapType) {
+//                case TAP_TYPE_TOUCH:
+//                    // The user has started touching the screen.
+//                    break;
+//                case TAP_TYPE_TOUCH_CANCEL:
+//                    // The user has started a different gesture or otherwise cancelled the tap.
+//                    break;
+//                case TAP_TYPE_TAP:
+//                    // The user has completed the tap gesture.
+//                    mTapCount++;
+//                    mBackgroundPaint.setColor(resources.getColor(mTapCount % 2 == 0 ?
+//                            R.color.background : R.color.background2));
+//                    break;
+//            }
+//            invalidate();
+//        }
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
@@ -256,44 +273,55 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
                 canvas.drawRect(0, 0, bounds.width(), bounds.height(), mBackgroundPaint);
             }
 
+
+
             // Draw H:MM in ambient mode or H:MM:SS in interactive mode.
             mTime.setToNow();
-            String text = mAmbient
-                    ? String.format("%d:%02d", mTime.hour, mTime.minute)
-                    : String.format("%d:%02d:%02d", mTime.hour, mTime.minute, mTime.second);
+//            String text = mAmbient
+//                    ? String.format("%d:%02d", mTime.hour, mTime.minute)
+//                    : String.format("%d:%02d:%02d", mTime.hour, mTime.minute, mTime.second);
+            String text = String.format("%d:%02d", mTime.hour, mTime.minute);
             canvas.drawText(text, mXOffset, mYOffset, mTextPaint);
+
+            long now = System.currentTimeMillis();
+            mCalendar.setTimeInMillis(now);
+            mDate.setTime(now);
+            mDayOfWeekFormat = new SimpleDateFormat("EEE MMM dd");
+            mDayOfWeekFormat.setCalendar(mCalendar);
+
+            canvas.drawText(mDayOfWeekFormat.format(mDate),mXOffset, mYOffset, mDatePaint);
         }
 
         /**
-         * Starts the {@link #mUpdateTimeHandler} timer if it should be running and isn't currently
+         * Starts the mUpdateTimeHandler timer if it should be running and isn't currently
          * or stops it if it shouldn't be running but currently is.
          */
-        private void updateTimer() {
-            mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME);
-            if (shouldTimerBeRunning()) {
-                mUpdateTimeHandler.sendEmptyMessage(MSG_UPDATE_TIME);
-            }
-        }
+//        private void updateTimer() {
+//            mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME);
+//            if (shouldTimerBeRunning()) {
+//                mUpdateTimeHandler.sendEmptyMessage(MSG_UPDATE_TIME);
+//            }
+//        }
 
         /**
-         * Returns whether the {@link #mUpdateTimeHandler} timer should be running. The timer should
+         * Returns whether the mUpdateTimeHandler} timer should be running. The timer should
          * only run when we're visible and in interactive mode.
          */
-        private boolean shouldTimerBeRunning() {
-            return isVisible() && !isInAmbientMode();
-        }
+//        private boolean shouldTimerBeRunning() {
+//            return isVisible() && !isInAmbientMode();
+//        }
 
         /**
          * Handle updating the time periodically in interactive mode.
          */
-        private void handleUpdateTimeMessage() {
-            invalidate();
-            if (shouldTimerBeRunning()) {
-                long timeMs = System.currentTimeMillis();
-                long delayMs = INTERACTIVE_UPDATE_RATE_MS
-                        - (timeMs % INTERACTIVE_UPDATE_RATE_MS);
-                mUpdateTimeHandler.sendEmptyMessageDelayed(MSG_UPDATE_TIME, delayMs);
-            }
-        }
+//        private void handleUpdateTimeMessage() {
+//            invalidate();
+//            if (shouldTimerBeRunning()) {
+//                long timeMs = System.currentTimeMillis();
+//                long delayMs = INTERACTIVE_UPDATE_RATE_MS
+//                        - (timeMs % INTERACTIVE_UPDATE_RATE_MS);
+//                mUpdateTimeHandler.sendEmptyMessageDelayed(MSG_UPDATE_TIME, delayMs);
+//            }
+//        }
     }
 }
