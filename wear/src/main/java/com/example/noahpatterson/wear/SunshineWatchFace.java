@@ -51,6 +51,52 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
     private static final Typeface NORMAL_TYPEFACE =
             Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
 
+    private Rect r = new Rect();
+
+    private void drawFirstCenter(Canvas canvas, Paint paint, String text) {
+        int cHeight = canvas.getClipBounds().height();
+        int cWidth = canvas.getClipBounds().width();
+
+        paint.setTextAlign(Paint.Align.LEFT);
+        paint.getTextBounds(text, 0, text.length(), r);
+
+        float x = cWidth / 2f - r.width() / 2f - r.left;
+//        float y = cHeight / 2f + r.height() / 2f - r.bottom;
+//        float y  = (cHeight /2f)  - ((r.height()/totalOffset - 0.5f) * totalOffset) ;
+        float y = cHeight/2f - r.height()/2f;
+        canvas.drawText(text, x, y, paint);
+    }
+    private void drawSecondCenter(Canvas canvas, Paint paint, String text) {
+        int cHeight = canvas.getClipBounds().height();
+        int cWidth = canvas.getClipBounds().width();
+
+        paint.setTextAlign(Paint.Align.LEFT);
+        paint.getTextBounds(text, 0, text.length(), r);
+
+        float x = cWidth / 2f - r.width() / 2f - r.left;
+//        float y = cHeight / 2f + r.height() / 2f - r.bottom;
+//        float y  = (cHeight /2f)  - ((r.height()/totalOffset - 0.5f) * totalOffset) ;
+        float y = cHeight/2f + r.height()/2f;
+        canvas.drawText(text, x, y, paint);
+    }
+//    private void drawCenter(Canvas canvas, Paint paint, String text) {
+//            int cHeight = canvas.getClipBounds().height();
+//            int cWidth = canvas.getClipBounds().width();
+//
+//            paint.setTextAlign(Paint.Align.LEFT);
+//            paint.getTextBounds(text, 0, text.length(), r);
+//
+//            float x = cWidth / 2f - r.width() / 2f - r.left;
+//            float y = cHeight / 2f + r.height() / 2f - r.bottom;
+//            canvas.drawText(text, x, y, paint);
+//        }
+
+    private float getTextHeight(Paint paint, String text) {
+        Rect rect = new Rect();
+        paint.getTextBounds(text, 0, text.length(), rect);
+        return rect.height();
+    }
+
     /**
      * Update rate in milliseconds for interactive mode. We update once a second since seconds are
      * displayed in interactive mode.
@@ -113,6 +159,7 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
 
         float mXOffset;
         float mYOffset;
+        float mLineHeight;
 
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
@@ -132,6 +179,7 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
                     .build());
             Resources resources = SunshineWatchFace.this.getResources();
             mYOffset = resources.getDimension(R.dimen.digital_y_offset);
+            mLineHeight = resources.getDimension(R.dimen.line_height);
 
             mBackgroundPaint = new Paint();
             mBackgroundPaint.setColor(resources.getColor(R.color.primary));
@@ -204,12 +252,13 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             // Load resources that have alternate values for round watches.
             Resources resources = SunshineWatchFace.this.getResources();
             boolean isRound = insets.isRound();
-            mXOffset = resources.getDimension(isRound
-                    ? R.dimen.digital_x_offset_round : R.dimen.digital_x_offset);
+//            mXOffset = resources.getDimension(isRound
+//                    ? R.dimen.digital_x_offset_round : R.dimen.digital_x_offset);
             float textSize = resources.getDimension(isRound
                     ? R.dimen.digital_text_size_round : R.dimen.digital_text_size);
-
+            float dateTextSize = resources.getDimension(isRound ? R.dimen.date_square_text_size : R.dimen.date_circle_text_size);
             mTextPaint.setTextSize(textSize);
+            mDatePaint.setTextSize(dateTextSize);
         }
 
         @Override
@@ -273,15 +322,15 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
                 canvas.drawRect(0, 0, bounds.width(), bounds.height(), mBackgroundPaint);
             }
 
-
-
             // Draw H:MM in ambient mode or H:MM:SS in interactive mode.
             mTime.setToNow();
 //            String text = mAmbient
 //                    ? String.format("%d:%02d", mTime.hour, mTime.minute)
 //                    : String.format("%d:%02d:%02d", mTime.hour, mTime.minute, mTime.second);
             String text = String.format("%d:%02d", mTime.hour, mTime.minute);
-            canvas.drawText(text, mXOffset, mYOffset, mTextPaint);
+//            canvas.drawText(text, center, mYOffset, mTextPaint);
+
+//            drawCenter(canvas,mTextPaint, text,-textOffset);
 
             long now = System.currentTimeMillis();
             mCalendar.setTimeInMillis(now);
@@ -289,7 +338,17 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             mDayOfWeekFormat = new SimpleDateFormat("EEE MMM dd");
             mDayOfWeekFormat.setCalendar(mCalendar);
 
-            canvas.drawText(mDayOfWeekFormat.format(mDate),mXOffset, mYOffset, mDatePaint);
+//            canvas.drawText(mDayOfWeekFormat.format(mDate),center, mYOffset + mLineHeight, mDatePaint);
+            String dateFormatted = mDayOfWeekFormat.format(mDate);
+            float dateOffset = getTextHeight(mDatePaint, dateFormatted);
+            float textOffset = getTextHeight(mTextPaint, text);
+            float totalHeight = textOffset + dateOffset;
+
+            drawFirstCenter(canvas, mTextPaint,text);
+            drawSecondCenter(canvas,mDatePaint,dateFormatted);
+
+//            drawCenter(canvas,mTextPaint,text,totalHeight);
+//            drawCenter(canvas,mDatePaint,dateFormatted, textOffset + mLineHeight);
         }
 
         /**
