@@ -64,43 +64,43 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
 
     private Rect r = new Rect();
 
-    private void drawFirstCenter(Canvas canvas, Paint paint, String text) {
-        int cHeight = canvas.getClipBounds().height();
-        int cWidth = canvas.getClipBounds().width();
-
-        paint.setTextAlign(Paint.Align.LEFT);
-        paint.getTextBounds(text, 0, text.length(), r);
-
-        float x = cWidth / 2f - r.width() / 2f - r.left;
-//        float y = cHeight / 2f + r.height() / 2f - r.bottom;
-//        float y  = (cHeight /2f)  - ((r.height()/totalOffset - 0.5f) * totalOffset) ;
-        float y = cHeight/2f - r.height()/2f;
-        canvas.drawText(text, x, y, paint);
-    }
-    private void drawSecondCenter(Canvas canvas, Paint paint, String text) {
-        int cHeight = canvas.getClipBounds().height();
-        int cWidth = canvas.getClipBounds().width();
-
-        paint.setTextAlign(Paint.Align.LEFT);
-        paint.getTextBounds(text, 0, text.length(), r);
-
-        float x = cWidth / 2f - r.width() / 2f - r.left;
-//        float y = cHeight / 2f + r.height() / 2f - r.bottom;
-//        float y  = (cHeight /2f)  - ((r.height()/totalOffset - 0.5f) * totalOffset) ;
-        float y = cHeight/2f + r.height()/2f;
-        canvas.drawText(text, x, y, paint);
-    }
-//    private void drawCenter(Canvas canvas, Paint paint, String text) {
-//            int cHeight = canvas.getClipBounds().height();
-//            int cWidth = canvas.getClipBounds().width();
+//    private void drawFirstCenter(Canvas canvas, Paint paint, String text) {
+//        int cHeight = canvas.getClipBounds().height();
+//        int cWidth = canvas.getClipBounds().width();
 //
-//            paint.setTextAlign(Paint.Align.LEFT);
-//            paint.getTextBounds(text, 0, text.length(), r);
+//        paint.setTextAlign(Paint.Align.LEFT);
+//        paint.getTextBounds(text, 0, text.length(), r);
 //
-//            float x = cWidth / 2f - r.width() / 2f - r.left;
-//            float y = cHeight / 2f + r.height() / 2f - r.bottom;
-//            canvas.drawText(text, x, y, paint);
-//        }
+//        float x = cWidth / 2f - r.width() / 2f - r.left;
+////        float y = cHeight / 2f + r.height() / 2f - r.bottom;
+////        float y  = (cHeight /2f)  - ((r.height()/totalOffset - 0.5f) * totalOffset) ;
+//        float y = cHeight/2f - r.height()/2f;
+//        canvas.drawText(text, x, y, paint);
+//    }
+//    private void drawSecondCenter(Canvas canvas, Paint paint, String text) {
+//        int cHeight = canvas.getClipBounds().height();
+//        int cWidth = canvas.getClipBounds().width();
+//
+//        paint.setTextAlign(Paint.Align.LEFT);
+//        paint.getTextBounds(text, 0, text.length(), r);
+//
+//        float x = cWidth / 2f - r.width() / 2f - r.left;
+////        float y = cHeight / 2f + r.height() / 2f - r.bottom;
+////        float y  = (cHeight /2f)  - ((r.height()/totalOffset - 0.5f) * totalOffset) ;
+//        float y = cHeight/2f + r.height()/2f;
+//        canvas.drawText(text, x, y, paint);
+//    }
+    private void drawCenter(Canvas canvas, Paint paint, String text, float yOffset) {
+            int cHeight = canvas.getClipBounds().height();
+            int cWidth = canvas.getClipBounds().width();
+
+            paint.setTextAlign(Paint.Align.LEFT);
+            paint.getTextBounds(text, 0, text.length(), r);
+
+            float x = cWidth / 2f - r.width() / 2f - r.left;
+            float y = cHeight / 2f + r.height() / 2f - r.bottom;
+            canvas.drawText(text, x, y+ yOffset, paint);
+        }
 
     private float getTextHeight(Paint paint, String text) {
         Rect rect = new Rect();
@@ -332,35 +332,24 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
                 canvas.drawRect(0, 0, bounds.width(), bounds.height(), mBackgroundPaint);
             }
 
-            // Draw H:MM in ambient mode or H:MM:SS in interactive mode.
             mTime.setToNow();
-//            String text = mAmbient
-//                    ? String.format("%d:%02d", mTime.hour, mTime.minute)
-//                    : String.format("%d:%02d:%02d", mTime.hour, mTime.minute, mTime.second);
             String text = String.format("%d:%02d", mTime.hour, mTime.minute);
-//            canvas.drawText(text, center, mYOffset, mTextPaint);
-
-//            drawCenter(canvas,mTextPaint, text,-textOffset);
-
             long now = System.currentTimeMillis();
             mCalendar.setTimeInMillis(now);
             mDate.setTime(now);
             mDayOfWeekFormat = new SimpleDateFormat("EEE MMM dd");
             mDayOfWeekFormat.setCalendar(mCalendar);
 
-//            canvas.drawText(mDayOfWeekFormat.format(mDate),center, mYOffset + mLineHeight, mDatePaint);
             String dateFormatted = mDayOfWeekFormat.format(mDate);
             float dateOffset = getTextHeight(mDatePaint, dateFormatted);
             float textOffset = getTextHeight(mTextPaint, text);
             float totalHeight = textOffset + dateOffset;
 
-            drawFirstCenter(canvas, mTextPaint,text);
-            drawSecondCenter(canvas,mDatePaint,dateFormatted);
+            drawCenter(canvas, mTextPaint, text, 0);
+            drawCenter(canvas, mDatePaint, dateFormatted, mLineHeight) ;
 
-//            drawCenter(canvas,mTextPaint,text,totalHeight);
-//            drawCenter(canvas,mDatePaint,dateFormatted, textOffset + mLineHeight);
-
-            canvas.drawText(String.format("%3s", String.valueOf(mHighTemp))  + "° C " + String.format("%3s", String.valueOf(mLowTemp)) + "° C " , mXOffset, textOffset, mHighTempPaint);
+            String tempStr = String.format("%3s", String.valueOf(mHighTemp))  + "° C " + String.format("%3s", String.valueOf(mLowTemp)) + "° C ";
+            drawCenter(canvas, mHighTempPaint, tempStr,mLineHeight*2);
         }
 
         @Override
