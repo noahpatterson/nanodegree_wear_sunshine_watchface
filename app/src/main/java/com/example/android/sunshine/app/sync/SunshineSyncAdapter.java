@@ -101,6 +101,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
     GoogleApiClient googleApiClient;
     Double mHighTemp;
     Double mLowTemp;
+    int mWeatherId;
 
     public SunshineSyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
@@ -350,6 +351,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
                 if (i == 0){
                     mHighTemp = high;
                     mLowTemp = low;
+                    mWeatherId = weatherId;
                     sendWeatherToWatchFace();
                 }
             }
@@ -689,6 +691,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
             DataMap dataMap = new DataMap();
             dataMap.putDouble("high", mHighTemp);
             dataMap.putDouble("low", mLowTemp);
+            dataMap.putInt("weatherId", mWeatherId);
 
             PutDataMapRequest putDataMapRequest = PutDataMapRequest.create("/weatherData");
             putDataMapRequest.getDataMap().putAll(dataMap);

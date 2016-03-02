@@ -21,11 +21,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
@@ -60,37 +64,10 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
     private static final String LOG_TAG = "WatchFaceService";
 
-    private boolean weatherDataChanged = false;
 
     private Rect r = new Rect();
 
-//    private void drawFirstCenter(Canvas canvas, Paint paint, String text) {
-//        int cHeight = canvas.getClipBounds().height();
-//        int cWidth = canvas.getClipBounds().width();
-//
-//        paint.setTextAlign(Paint.Align.LEFT);
-//        paint.getTextBounds(text, 0, text.length(), r);
-//
-//        float x = cWidth / 2f - r.width() / 2f - r.left;
-////        float y = cHeight / 2f + r.height() / 2f - r.bottom;
-////        float y  = (cHeight /2f)  - ((r.height()/totalOffset - 0.5f) * totalOffset) ;
-//        float y = cHeight/2f - r.height()/2f;
-//        canvas.drawText(text, x, y, paint);
-//    }
-//    private void drawSecondCenter(Canvas canvas, Paint paint, String text) {
-//        int cHeight = canvas.getClipBounds().height();
-//        int cWidth = canvas.getClipBounds().width();
-//
-//        paint.setTextAlign(Paint.Align.LEFT);
-//        paint.getTextBounds(text, 0, text.length(), r);
-//
-//        float x = cWidth / 2f - r.width() / 2f - r.left;
-////        float y = cHeight / 2f + r.height() / 2f - r.bottom;
-////        float y  = (cHeight /2f)  - ((r.height()/totalOffset - 0.5f) * totalOffset) ;
-//        float y = cHeight/2f + r.height()/2f;
-//        canvas.drawText(text, x, y, paint);
-//    }
-    private void drawCenter(Canvas canvas, Paint paint, String text, float yOffset) {
+    private void drawCenter(Canvas canvas, Paint paint, String text, float yOffset, float xOffset) {
             int cHeight = canvas.getClipBounds().height();
             int cWidth = canvas.getClipBounds().width();
 
@@ -99,8 +76,14 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
 
             float x = cWidth / 2f - r.width() / 2f - r.left;
             float y = cHeight / 2f + r.height() / 2f - r.bottom;
-            canvas.drawText(text, x, y+ yOffset, paint);
+            canvas.drawText(text, x+ xOffset, y+ yOffset, paint);
         }
+
+    private void drawWeatherIconCenter(Canvas canvas, Bitmap bitmap, float yOffset, float xOffset){
+        float centerX = canvas.getClipBounds().width()/2f;
+        float centerY = canvas.getClipBounds().height()/2f;
+        canvas.drawBitmap(bitmap,centerX + xOffset, centerY + yOffset, null);
+    }
 
     private float getTextHeight(Paint paint, String text) {
         Rect rect = new Rect();
@@ -124,9 +107,10 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
         Paint mBackgroundPaint;
         Paint mTextPaint;
         Paint mHighTempPaint;
-        Paint mLowTempPaint;
         long mHighTemp;
         long mLowTemp;
+        int mWeatherId;
+        Bitmap weatherIconBitmap;
 
         //add date
         Paint mDatePaint;
@@ -181,9 +165,6 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
 
             mHighTempPaint = new Paint();
             mHighTempPaint = createTextPaint(resources.getColor(R.color.digital_text));
-
-            mLowTempPaint = new Paint();
-            mLowTempPaint = createTextPaint(resources.getColor(R.color.digital_text));
 
             mTime = new Time();
             mCalendar = Calendar.getInstance();
@@ -268,7 +249,6 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             mTextPaint.setTextSize(textSize);
             mDatePaint.setTextSize(dateTextSize);
             mHighTempPaint.setTextSize(dateTextSize);
-            mLowTempPaint.setTextSize(dateTextSize);
         }
 
         @Override
@@ -345,11 +325,30 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             float textOffset = getTextHeight(mTextPaint, text);
             float totalHeight = textOffset + dateOffset;
 
-            drawCenter(canvas, mTextPaint, text, 0);
-            drawCenter(canvas, mDatePaint, dateFormatted, mLineHeight) ;
+            drawCenter(canvas, mTextPaint, text, 0, 0);
+            drawCenter(canvas, mDatePaint, dateFormatted, mLineHeight, 0);
+
 
             String tempStr = String.format("%3s", String.valueOf(mHighTemp))  + "° C " + String.format("%3s", String.valueOf(mLowTemp)) + "° C ";
-            drawCenter(canvas, mHighTempPaint, tempStr,mLineHeight*2);
+            //weather icon
+            float tempTextLength = mHighTempPaint.measureText(tempStr);
+//            if (mWeatherId > 0) {
+//                drawWeatherIconCenter(canvas, weatherIconBitmap, mLineHeight * 2, tempTextLength);
+//            }
+            //load icon
+            if (mWeatherId > 0) {
+//                Drawable weatherIconDrawable = resources.getDrawable(Utility.getArtResourceForWeatherCondition(mWeatherId), null);
+                int iconResource = Utility.getArtResourceForWeatherCondition(mWeatherId);
+                Log.d(LOG_TAG, "iconResource: " + String.valueOf(iconResource));
+//                Drawable weatherIconDrawable = getResources().getDrawable(iconResource, null);
+                Drawable weatherIconDrawable = getResources().getDrawable(R.drawable.art_clear, null);
+                weatherIconBitmap =   ((BitmapDrawable) weatherIconDrawable).getBitmap();
+                drawWeatherIconCenter(canvas, weatherIconBitmap, mLineHeight * 2, 0);
+//                getResources().get
+//                weatherIconBitmap = BitmapFactory.decodeResource(getResources(), Utility.getArtResourceForWeatherCondition(mWeatherId));
+//                weatherIconBitmap = ((BitmapDrawable) weatherIconDrawable).getBitmap();
+            }
+            drawCenter(canvas, mHighTempPaint, tempStr, mLineHeight * 2, 0);
         }
 
         @Override
@@ -365,7 +364,8 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
 
                     mHighTemp = Math.round(dataMap.getDouble("high"));
                     mLowTemp = Math.round(dataMap.getDouble("low"));
-                    weatherDataChanged = true;
+
+                    mWeatherId = dataMap.getInt("weatherId");
                     invalidate();
                 }
             }
