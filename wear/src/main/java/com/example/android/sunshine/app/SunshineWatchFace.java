@@ -268,6 +268,8 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
                 mAmbient = inAmbientMode;
                 if (mLowBitAmbient) {
                     mTextPaint.setAntiAlias(!inAmbientMode);
+                    mDatePaint.setAntiAlias(!inAmbientMode);
+                    mHighTempPaint.setAntiAlias(!inAmbientMode);
                 }
                 invalidate();
             }
@@ -301,7 +303,7 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             String tempStr = mHighTemp + " " + mLowTemp;
             //load icon
             if (mWeatherId > 0) {
-                int iconResource = Utility.getArtResourceForWeatherCondition(mWeatherId);
+                int iconResource = Utility.getArtResourceForWeatherCondition(mWeatherId, mAmbient);
                 Log.d(LOG_TAG, "iconResource: " + String.valueOf(iconResource));
                 Drawable weatherIconDrawable = getResources().getDrawable(iconResource, null);
                 Bitmap weatherIcon = ((BitmapDrawable) weatherIconDrawable).getBitmap();
