@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">Wear</string>
     <string name="my_digital_name">My Digital</string>
+    <string name="watchface_log">WatchFaceService</string>
+    <string name="temp_none">none</string>
+    <string name="HIGH_TEMP_KEY">high</string>
+    <string name="LOW_TEMP_KEY">low</string>
+    <string name="WEATHER_ID_KEY">weatherId</string>
 </resources>

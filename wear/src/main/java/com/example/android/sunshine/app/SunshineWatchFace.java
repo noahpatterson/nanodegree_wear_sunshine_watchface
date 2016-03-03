@@ -62,7 +62,7 @@ import java.util.TimeZone;
 public class SunshineWatchFace extends CanvasWatchFaceService {
     private static final Typeface NORMAL_TYPEFACE =
             Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
-    private static final String LOG_TAG = "WatchFaceService";
+    private final String LOG_TAG = "WatchFaceService";
 
 
     private Rect r = new Rect();
@@ -91,16 +91,16 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
         return rect.height();
     }
 
-
     @Override
     public Engine onCreateEngine() {
         return new Engine();
     }
 
-
     private class Engine extends CanvasWatchFaceService.Engine implements DataApi.DataListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+        private final String WEATHER_ID_KEY = getString(R.string.WEATHER_ID_KEY);
+        private final String HIGH_TEMP_KEY = getString(R.string.HIGH_TEMP_KEY);
+        private final String LOW_TEMP_KEY = getString(R.string.LOW_TEMP_KEY);
         boolean mRegisteredTimeZoneReceiver = false;
-
 
         GoogleApiClient mGoogleApiClient;
 
@@ -169,8 +169,8 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             mDate = new Date();
 
             //default for missing weather temps
-            mHighTemp = "none";
-            mLowTemp = "none";
+            mHighTemp = resources.getString(R.string.temp_none);
+            mLowTemp = resources.getString(R.string.temp_none);;
 
             mGoogleApiClient = new GoogleApiClient.Builder(SunshineWatchFace.this)
                     .addApi(Wearable.API)
@@ -239,8 +239,6 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             // Load resources that have alternate values for round watches.
             Resources resources = SunshineWatchFace.this.getResources();
             boolean isRound = insets.isRound();
-//            mXOffset = resources.getDimension(isRound
-//                    ? R.dimen.digital_x_offset_round : R.dimen.digital_x_offset);
             float textSize = resources.getDimension(isRound
                     ? R.dimen.digital_text_size_round : R.dimen.digital_text_size);
             float dateTextSize = resources.getDimension(isRound ? R.dimen.date_square_text_size : R.dimen.date_circle_text_size);
@@ -284,6 +282,7 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
                 canvas.drawRect(0, 0, bounds.width(), bounds.height(), mBackgroundPaint);
             }
 
+            Resources resources = SunshineWatchFace.this.getResources();
             mTime.setToNow();
             String text = String.format("%d:%02d", mTime.hour, mTime.minute);
             long now = System.currentTimeMillis();
@@ -296,8 +295,8 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             float dateOffset = getTextHeight(mDatePaint, dateFormatted);
             float textOffset = getTextHeight(mTextPaint, text);
 
-            drawCenter(canvas, mTextPaint, text, -20f, 0);
-            drawCenter(canvas, mDatePaint, dateFormatted, mLineHeight -15f, 0);
+            drawCenter(canvas, mTextPaint, text, resources.getInteger(R.integer.time_text_yOffset), resources.getInteger(R.integer.time_text_xOffset));
+            drawCenter(canvas, mDatePaint, dateFormatted, mLineHeight + resources.getInteger(R.integer.date_text_yOffset), resources.getInteger(R.integer.date_text_xOffset));
 
 
             String tempStr = mHighTemp + " " + mLowTemp;
@@ -307,10 +306,10 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
                 Log.d(LOG_TAG, "iconResource: " + String.valueOf(iconResource));
                 Drawable weatherIconDrawable = getResources().getDrawable(iconResource, null);
                 Bitmap weatherIcon = ((BitmapDrawable) weatherIconDrawable).getBitmap();
-                weatherIconBitmap = Bitmap.createScaledBitmap(weatherIcon, 50, 50, false);
-                drawWeatherIconCenter(canvas, weatherIconBitmap, (mLineHeight * 3) - 30f, -25f);
+                weatherIconBitmap = Bitmap.createScaledBitmap(weatherIcon, resources.getInteger(R.integer.weatherIcon_bitmap_height), resources.getInteger(R.integer.weatherIcon_bitmap_width), false);
+                drawWeatherIconCenter(canvas, weatherIconBitmap, (mLineHeight * 3) - resources.getInteger(R.integer.icon_yOffset), resources.getInteger(R.integer.icon_xOffset));
             }
-            drawCenter(canvas, mHighTempPaint, tempStr, (mLineHeight * 2) - 20f, 0);
+            drawCenter(canvas, mHighTempPaint, tempStr, (mLineHeight * 2) - resources.getInteger(R.integer.temp_text_yOffset), resources.getInteger(R.integer.temp_text_xOffset));
         }
 
         @Override
@@ -324,10 +323,10 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
                     DataMapItem dataMapItem = DataMapItem.fromDataItem(dataItem);
                     DataMap dataMap = dataMapItem.getDataMap();
 
-                    mHighTemp = dataMap.getString("high");
-                    mLowTemp = dataMap.getString("low");
+                    mHighTemp = dataMap.getString(HIGH_TEMP_KEY);
+                    mLowTemp = dataMap.getString(LOW_TEMP_KEY);
 
-                    mWeatherId = dataMap.getInt("weatherId");
+                    mWeatherId = dataMap.getInt(WEATHER_ID_KEY);
 
                     weatherChanged = true;
                     invalidate();

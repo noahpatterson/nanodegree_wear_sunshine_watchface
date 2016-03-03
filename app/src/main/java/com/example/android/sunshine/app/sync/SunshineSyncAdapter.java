@@ -679,6 +679,12 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
 
         @Override
         protected Void doInBackground(Void... params) {
+            Context context = getContext();
+            Resources resources = context.getResources();
+            final String HIGH_TEMP_KEY = resources.getString(R.string.HIGH_TEMP_KEY);
+            final String LOW_TEMP_KEY = resources.getString(R.string.LOW_TEMP_KEY);
+            final String WEATHER_ID_KEY = resources.getString(R.string.WEATHER_ID_KEY);
+            final String WEATHER_DATA_PATH = resources.getString(R.string.WEATHER_DATA_PATH);
             Log.d(LOG_TAG, "in handleActionDataUpdated");
 
 
@@ -686,16 +692,16 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter implements 
                 googleApiClient.connect();
             }
 
-            Context context = getContext();
+
             Log.d(LOG_TAG, "sending weather data");
             DataMap dataMap = new DataMap();
             String formattedHighTemp = Utility.formatTemperature(context, mHighTemp);
             String formattedLowTemp = Utility.formatTemperature(context, mLowTemp);
-            dataMap.putString("high", formattedHighTemp);
-            dataMap.putString("low", formattedLowTemp);
-            dataMap.putInt("weatherId", mWeatherId);
+            dataMap.putString(HIGH_TEMP_KEY, formattedHighTemp);
+            dataMap.putString(LOW_TEMP_KEY, formattedLowTemp);
+            dataMap.putInt(WEATHER_ID_KEY, mWeatherId);
 
-            PutDataMapRequest putDataMapRequest = PutDataMapRequest.create("/weatherData");
+            PutDataMapRequest putDataMapRequest = PutDataMapRequest.create(WEATHER_DATA_PATH);
             putDataMapRequest.getDataMap().putAll(dataMap);
             PutDataRequest request = putDataMapRequest.asPutDataRequest();
             DataApi.DataItemResult dataItemResult = Wearable.DataApi.putDataItem(googleApiClient, request).await();
