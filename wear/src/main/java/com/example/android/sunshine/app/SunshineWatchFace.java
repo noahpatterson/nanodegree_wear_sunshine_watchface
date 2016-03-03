@@ -83,7 +83,6 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
         float centerX = canvas.getClipBounds().width()/2f;
         float centerY = canvas.getClipBounds().height()/2f;
         canvas.drawBitmap(bitmap, centerX + xOffset, centerY + yOffset, null);
-
     }
 
     private float getTextHeight(Paint paint, String text) {
@@ -272,35 +271,7 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
                 }
                 invalidate();
             }
-
-            // Whether the timer should be running depends on whether we're visible (as well as
-            // whether we're in ambient mode), so we may need to start or stop the timer.
-//            updateTimer();
         }
-
-        /**
-         * Captures tap event (and tap type) and toggles the background color if the user finishes
-         * a tap.
-         */
-//        @Override
-//        public void onTapCommand(int tapType, int x, int y, long eventTime) {
-//            Resources resources = SunshineWatchFace.this.getResources();
-//            switch (tapType) {
-//                case TAP_TYPE_TOUCH:
-//                    // The user has started touching the screen.
-//                    break;
-//                case TAP_TYPE_TOUCH_CANCEL:
-//                    // The user has started a different gesture or otherwise cancelled the tap.
-//                    break;
-//                case TAP_TYPE_TAP:
-//                    // The user has completed the tap gesture.
-//                    mTapCount++;
-//                    mBackgroundPaint.setColor(resources.getColor(mTapCount % 2 == 0 ?
-//                            R.color.background : R.color.background2));
-//                    break;
-//            }
-//            invalidate();
-//        }
 
         @Override
         public void onDraw(Canvas canvas, Rect bounds) {
@@ -322,7 +293,6 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             String dateFormatted = mDayOfWeekFormat.format(mDate);
             float dateOffset = getTextHeight(mDatePaint, dateFormatted);
             float textOffset = getTextHeight(mTextPaint, text);
-            float totalHeight = textOffset + dateOffset;
 
             drawCenter(canvas, mTextPaint, text, -20f, 0);
             drawCenter(canvas, mDatePaint, dateFormatted, mLineHeight -15f, 0);
