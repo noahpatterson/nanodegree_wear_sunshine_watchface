@@ -76,13 +76,13 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
 
             float x = cWidth / 2f - r.width() / 2f - r.left;
             float y = cHeight / 2f + r.height() / 2f - r.bottom;
-            canvas.drawText(text, x+ xOffset, y+ yOffset, paint);
+            canvas.drawText(text, x + xOffset, y + yOffset, paint);
         }
 
     private void drawWeatherIconCenter(Canvas canvas, Bitmap bitmap, float yOffset, float xOffset){
         float centerX = canvas.getClipBounds().width()/2f;
         float centerY = canvas.getClipBounds().height()/2f;
-        canvas.drawBitmap(bitmap,centerX + xOffset, centerY + yOffset, null);
+        canvas.drawBitmap(bitmap, centerX + xOffset, centerY + yOffset, null);
 
     }
 
@@ -108,8 +108,8 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
         Paint mBackgroundPaint;
         Paint mTextPaint;
         Paint mHighTempPaint;
-        long mHighTemp;
-        long mLowTemp;
+        String mHighTemp;
+        String mLowTemp;
         int mWeatherId;
         Bitmap weatherIconBitmap;
 
@@ -118,7 +118,6 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
         Calendar mCalendar;
         Date mDate;
         SimpleDateFormat mDayOfWeekFormat;
-        java.text.DateFormat mDateFormat;
 
         boolean mAmbient;
         Time mTime;
@@ -129,11 +128,10 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
                 mTime.setToNow();
             }
         };
-        int mTapCount;
-
-        float mXOffset;
         float mYOffset;
         float mLineHeight;
+
+        boolean weatherChanged = false;
 
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
@@ -172,8 +170,8 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             mDate = new Date();
 
             //default for missing weather temps
-            mHighTemp = 0;
-            mLowTemp = 0;
+            mHighTemp = "none";
+            mLowTemp = "none";
 
             mGoogleApiClient = new GoogleApiClient.Builder(SunshineWatchFace.this)
                     .addApi(Wearable.API)
@@ -329,18 +327,18 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             drawCenter(canvas, mTextPaint, text, -20f, 0);
             drawCenter(canvas, mDatePaint, dateFormatted, mLineHeight -15f, 0);
 
-            String tempStr = String.format("%3s", String.valueOf(mHighTemp))  + "° C " + String.format("%3s", String.valueOf(mLowTemp)) + "° C ";
 
+            String tempStr = mHighTemp + " " + mLowTemp;
             //load icon
             if (mWeatherId > 0) {
                 int iconResource = Utility.getArtResourceForWeatherCondition(mWeatherId);
                 Log.d(LOG_TAG, "iconResource: " + String.valueOf(iconResource));
                 Drawable weatherIconDrawable = getResources().getDrawable(iconResource, null);
                 Bitmap weatherIcon = ((BitmapDrawable) weatherIconDrawable).getBitmap();
-                weatherIconBitmap =  Bitmap.createScaledBitmap(weatherIcon,50,50,false);
-                drawWeatherIconCenter(canvas, weatherIconBitmap, (mLineHeight * 3)-30f, -25f);
+                weatherIconBitmap = Bitmap.createScaledBitmap(weatherIcon, 50, 50, false);
+                drawWeatherIconCenter(canvas, weatherIconBitmap, (mLineHeight * 3) - 30f, -25f);
             }
-            drawCenter(canvas, mHighTempPaint, tempStr, (mLineHeight * 2)-20f, 0);
+            drawCenter(canvas, mHighTempPaint, tempStr, (mLineHeight * 2) - 20f, 0);
         }
 
         @Override
@@ -354,10 +352,12 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
                     DataMapItem dataMapItem = DataMapItem.fromDataItem(dataItem);
                     DataMap dataMap = dataMapItem.getDataMap();
 
-                    mHighTemp = Math.round(dataMap.getDouble("high"));
-                    mLowTemp = Math.round(dataMap.getDouble("low"));
+                    mHighTemp = dataMap.getString("high");
+                    mLowTemp = dataMap.getString("low");
 
                     mWeatherId = dataMap.getInt("weatherId");
+
+                    weatherChanged = true;
                     invalidate();
                 }
             }
