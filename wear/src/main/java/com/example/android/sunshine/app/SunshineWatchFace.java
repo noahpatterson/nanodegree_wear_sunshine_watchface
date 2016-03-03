@@ -83,6 +83,7 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
         float centerX = canvas.getClipBounds().width()/2f;
         float centerY = canvas.getClipBounds().height()/2f;
         canvas.drawBitmap(bitmap,centerX + xOffset, centerY + yOffset, null);
+
     }
 
     private float getTextHeight(Paint paint, String text) {
@@ -325,30 +326,21 @@ public class SunshineWatchFace extends CanvasWatchFaceService {
             float textOffset = getTextHeight(mTextPaint, text);
             float totalHeight = textOffset + dateOffset;
 
-            drawCenter(canvas, mTextPaint, text, 0, 0);
-            drawCenter(canvas, mDatePaint, dateFormatted, mLineHeight, 0);
-
+            drawCenter(canvas, mTextPaint, text, -20f, 0);
+            drawCenter(canvas, mDatePaint, dateFormatted, mLineHeight -15f, 0);
 
             String tempStr = String.format("%3s", String.valueOf(mHighTemp))  + "° C " + String.format("%3s", String.valueOf(mLowTemp)) + "° C ";
-            //weather icon
-            float tempTextLength = mHighTempPaint.measureText(tempStr);
-//            if (mWeatherId > 0) {
-//                drawWeatherIconCenter(canvas, weatherIconBitmap, mLineHeight * 2, tempTextLength);
-//            }
+
             //load icon
             if (mWeatherId > 0) {
-//                Drawable weatherIconDrawable = resources.getDrawable(Utility.getArtResourceForWeatherCondition(mWeatherId), null);
                 int iconResource = Utility.getArtResourceForWeatherCondition(mWeatherId);
                 Log.d(LOG_TAG, "iconResource: " + String.valueOf(iconResource));
-//                Drawable weatherIconDrawable = getResources().getDrawable(iconResource, null);
-                Drawable weatherIconDrawable = getResources().getDrawable(R.drawable.art_clear, null);
-                weatherIconBitmap =   ((BitmapDrawable) weatherIconDrawable).getBitmap();
-                drawWeatherIconCenter(canvas, weatherIconBitmap, mLineHeight * 2, 0);
-//                getResources().get
-//                weatherIconBitmap = BitmapFactory.decodeResource(getResources(), Utility.getArtResourceForWeatherCondition(mWeatherId));
-//                weatherIconBitmap = ((BitmapDrawable) weatherIconDrawable).getBitmap();
+                Drawable weatherIconDrawable = getResources().getDrawable(iconResource, null);
+                Bitmap weatherIcon = ((BitmapDrawable) weatherIconDrawable).getBitmap();
+                weatherIconBitmap =  Bitmap.createScaledBitmap(weatherIcon,50,50,false);
+                drawWeatherIconCenter(canvas, weatherIconBitmap, (mLineHeight * 3)-30f, -25f);
             }
-            drawCenter(canvas, mHighTempPaint, tempStr, mLineHeight * 2, 0);
+            drawCenter(canvas, mHighTempPaint, tempStr, (mLineHeight * 2)-20f, 0);
         }
 
         @Override
